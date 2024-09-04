@@ -15,7 +15,7 @@ func NewEcho(config *viper.Viper, log *logrus.Logger) *echo.Echo {
 
 	e.Use(RequestLogger(log))
 	e.Use(middleware.Recover())
-
+	e.Use(middleware.Secure())
 	// Set the custom error handler
 	e.HTTPErrorHandler = ErrorHandler(log)
 
