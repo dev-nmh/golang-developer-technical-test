@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS golang_developer_technical_test;
 USE golang_developer_technical_test;
 
 CREATE TABLE ms_billing_status (
-    `pk_ms_billing_status` int UNIQUE NOT NULL PRIMARY KEY,
+    `pk_ms_billing_status` int  NOT  NULL AUTO_INCREMENT PRIMARY KEY,
     `title` varchar(50) NOT NULL,
     `description` varchar(255),
     `is_active` tinyint(1) NOT NULL DEFAULT 1,
@@ -13,7 +13,7 @@ CREATE TABLE ms_billing_status (
 )ENGINE=InnoDB;
 
 CREATE TABLE ms_payment_status (
-    `pk_ms_payment_status` int UNIQUE NOT NULL PRIMARY KEY,
+    `pk_ms_payment_status` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `title` varchar(50) NOT NULL,
     `description` varchar(255),
     `is_active` tinyint(1) NOT NULL DEFAULT 1,
