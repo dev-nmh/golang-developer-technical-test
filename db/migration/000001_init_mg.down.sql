@@ -1,0 +1,1 @@
+DROP DATABASE IF EXISTS golang_developer_technical_test;
