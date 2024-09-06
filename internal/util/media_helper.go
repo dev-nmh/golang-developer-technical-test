@@ -2,8 +2,12 @@ package util
 
 import (
 	"context"
+	"encoding/base64"
+	"io"
+	"mime/multipart"
 	"time"
 
+	"braces.dev/errtrace"
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/spf13/viper"
@@ -30,4 +34,20 @@ func ImageUploadCoudinaryHelper(config *viper.Viper, input interface{}) (string,
 		return "", err
 	}
 	return uploadParam.SecureURL, nil
+}
+
+func GetBytesFile(file *multipart.FileHeader) (string, error) {
+	formFile, err := file.Open()
+
+	if err != nil {
+		return "", errtrace.Wrap(err)
+	}
+	defer formFile.Close()
+
+	fileBytes, err := io.ReadAll(formFile)
+	if err != nil {
+		return "", errtrace.Wrap(err)
+	}
+	encodedString := base64.StdEncoding.EncodeToString(fileBytes)
+	return encodedString, nil
 }

@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MsUser struct {
 	PkMsUser    uuid.UUID `gorm:"column:pk_ms_user;primaryKey"`
@@ -8,8 +12,8 @@ type MsUser struct {
 	FullName    string    `gorm:"column:full_name"`
 	LegalName   string    `gorm:"column:legal_name"`
 	BirthPlace  string    `gorm:"column:birth_place"`
-	BirthDate   string    `gorm:"column:birth_date"`
-	Salary      string    `gorm:"column:salary"`
+	BirthDate   time.Time `gorm:"column:birth_date"`
+	Salary      int       `gorm:"column:salary"`
 	ImageKtp    string    `gorm:"column:image_ktp"`
 	ImageSelfie string    `gorm:"column:image_selfie"`
 	Stamp

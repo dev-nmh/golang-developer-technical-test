@@ -1,78 +1,143 @@
 package usecase
 
 import (
+	"context"
+	"github/golang-developer-technical-test/internal/entity"
+	"github/golang-developer-technical-test/internal/model"
+	"github/golang-developer-technical-test/internal/model/converter"
 	"github/golang-developer-technical-test/internal/repository"
+	"github/golang-developer-technical-test/internal/util"
+	"sync"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type UserUseCase struct {
-	DB             *gorm.DB
-	Log            *logrus.Logger
-	Validate       *validator.Validate
-	UserRepository *repository.UserRepository
+	DB                 *gorm.DB
+	Log                *logrus.Logger
+	Validate           *validator.Validate
+	UserRepository     *repository.UserRepository
+	CloudinaryUploader *repository.CloudinaryUploader
 }
 
-func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository) *UserUseCase {
+func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, userRepository *repository.UserRepository, cloudinary *repository.CloudinaryUploader) *UserUseCase {
 	return &UserUseCase{
-		DB:             db,
-		Log:            logger,
-		Validate:       validate,
-		UserRepository: userRepository,
+		DB:                 db,
+		Log:                logger,
+		Validate:           validate,
+		UserRepository:     userRepository,
+		CloudinaryUploader: cloudinary,
 	}
 }
 
-// func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponse, error) {
-// 	tx := c.DB.WithContext(ctx).Begin()
-// 	defer tx.Rollback()
+func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponseDetail, error) {
+	tx := c.DB.WithContext(ctx).Begin()
 
-// 	err := c.Validate.Struct(request)
-// 	if err != nil {
-// 		c.Log.Warnf("Invalid request body : %+v", err)
-// 		return nil, fiber.ErrBadRequest
-// 	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-// 	total, err := c.UserRepository.CountById(tx, request.ID)
-// 	if err != nil {
-// 		c.Log.Warnf("Failed count user from database : %+v", err)
-// 		return nil, fiber.ErrInternalServerError
-// 	}
+	err := c.Validate.Struct(request)
+	if err != nil {
+		c.Log.Warnf("Invalid request body : %+v", err)
+		tx.Rollback()
+		return nil, echo.ErrBadRequest
+	}
 
-// 	if total > 0 {
-// 		c.Log.Warnf("User already exists : %+v", err)
-// 		return nil, fiber.ErrConflict
-// 	}
+	total, err := c.UserRepository.CountByWhere(tx, map[string]interface{}{
+		"NIK": request.Nik,
+	})
+	if err != nil {
+		c.Log.Warnf("Failed count user from database : %+v", err)
+		tx.Rollback()
+		return nil, echo.ErrInternalServerError
+	}
 
-// 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		c.Log.Warnf("Failed to generate bcrype hash : %+v", err)
-// 		return nil, fiber.ErrInternalServerError
-// 	}
+	if total > 0 {
+		c.Log.Warnf("User already exists : %+v", err)
+		tx.Rollback()
+		return nil, echo.ErrConflict
+	}
 
-// 	user := &entity.User{
-// 		ID:       request.ID,
-// 		Password: string(password),
-// 		Name:     request.Name,
-// 	}
+	id, err := uuid.NewV7()
+	if err != nil {
+		c.Log.Warnf("Failed Create UUID Id : %+v", err)
+		tx.Rollback()
+		return nil, echo.ErrInternalServerError
+	}
+	user := &entity.MsUser{
+		PkMsUser:   id,
+		Nik:        request.Nik,
+		FullName:   request.FullName,
+		LegalName:  request.LegalName,
+		BirthPlace: request.BirthPlace,
+		BirthDate:  request.BirthDate,
+		Salary:     request.Salary,
+		Stamp: entity.Stamp{
+			CreatedBy: id.String(),
+			UpdatedBy: id.String(),
+		},
+	}
 
-// 	if err := c.UserRepository.Create(tx, user); err != nil {
-// 		c.Log.Warnf("Failed create user to database : %+v", err)
-// 		return nil, fiber.ErrInternalServerError
-// 	}
+	var wg sync.WaitGroup
+	errChan := make(chan error, 2)
+	var base64FileKtp, base64FileSelfie string
 
-// 	if err := tx.Commit().Error; err != nil {
-// 		c.Log.Warnf("Failed commit transaction : %+v", err)
-// 		return nil, fiber.ErrInternalServerError
-// 	}
+	wg.Add(2)
 
-// 	event := converter.UserToEvent(user)
-// 	c.Log.Info("Publishing user created event")
-// 	if err = c.UserProducer.Send(event); err != nil {
-// 		c.Log.Warnf("Failed publish user created event : %+v", err)
-// 		return nil, fiber.ErrInternalServerError
-// 	}
+	go func() {
+		defer wg.Done()
+		base64, err := util.GetBytesFile(request.ImageKtp)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		base64FileKtp = base64
+	}()
 
-// 	return converter.UserToResponse(user), nil
-// }
+	go func() {
+		defer wg.Done()
+		// base64, err := util.GetBytesFile(request.ImageSelfie)
+		base64, err := c.CloudinaryUploader.UploadFromMultipartHeader(request.ImageSelfie)
+		if err != nil {
+			errChan <- err
+			return
+		}
+		base64FileSelfie = base64
+	}()
+
+	// Close errChan after all uploads are done
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	for err := range errChan {
+		if err != nil {
+			c.Log.Warnf("Failed to upload images: %+v", err)
+			tx.Rollback()
+			return nil, echo.ErrInternalServerError
+		}
+	}
+
+	user.ImageKtp = base64FileKtp
+	user.ImageSelfie = base64FileSelfie
+	if err := c.UserRepository.Create(tx, user); err != nil {
+		c.Log.Warnf("Failed create user to database : %+v", err)
+		tx.Rollback()
+		return nil, echo.ErrInternalServerError
+	}
+	if err := tx.Commit().Error; err != nil {
+		c.Log.Warnf("Failed to commit transaction: %+v", err)
+		return nil, echo.ErrInternalServerError
+	}
+
+	response := converter.UserToResponse(user)
+	return response, nil
+}

@@ -4,6 +4,7 @@ import (
 	"github/golang-developer-technical-test/internal/dto"
 	"github/golang-developer-technical-test/internal/model"
 	"github/golang-developer-technical-test/internal/usecase"
+
 	"log"
 	"net/http"
 
@@ -17,15 +18,16 @@ type UserController struct {
 	UseCase *usecase.UserUseCase
 }
 
-func NewUseController(logger *logrus.Logger) *UserController {
+func NewUseController(logger *logrus.Logger, useCase *usecase.UserUseCase) *UserController {
 	return &UserController{
-		Log: logger,
+		Log:     logger,
+		UseCase: useCase,
 	}
 }
 
 func (c *UserController) Register(e echo.Context) error {
 	response := new(dto.JSONResponse)
-	req := model.RegisterUserRequest{}
+	var req model.RegisterUserRequest
 
 	if err := e.Bind(&req); err != nil {
 		c.Log.Warnf("Failed to parse request body : %+v", err)
@@ -41,7 +43,7 @@ func (c *UserController) Register(e echo.Context) error {
 	} else {
 		c.Log.Warnf("Failed to get image_selfie file: %+v", err)
 		response.StatusCode = http.StatusBadRequest
-		response.Message = "ImageSelfie file upload failed"
+		response.Message = "image_selfie file upload failed"
 		response.Data = nil
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
@@ -51,12 +53,28 @@ func (c *UserController) Register(e echo.Context) error {
 	} else {
 		c.Log.Warnf("Failed to get image_ktp file: %+v", err)
 		response.StatusCode = http.StatusBadRequest
-		response.Message = "ImageSelfie file upload failed"
+		response.Message = "image_ktp file upload failed"
 		response.Data = nil
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
 
-	c.Log.Println(req)
-
+	if err := e.Validate(req); err != nil {
+		c.Log.Warnf("Failed to get image_ktp file: %+v", err)
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Data Not Valid"
+		response.Data = err.Error()
+		return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	}
+	c.Log.Println("Working")
+	_, err := c.UseCase.Create(e.Request().Context(), &req)
+	if err != nil {
+		c.Log.Warnf("Failed to create user: %+v", err)
+		response.StatusCode = http.StatusInternalServerError
+		response.Message = "Failed to create user"
+		return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	}
+	response.StatusCode = http.StatusCreated
+	response.Message = "User created successfully"
+	response.Data = nil
 	return errtrace.Wrap(e.JSON(response.StatusCode, response))
 }

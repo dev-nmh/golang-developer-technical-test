@@ -1,5 +1,5 @@
 package config
 
 const (
-	PREFIX_API = "api/v1"
+	PREFIX_API    = "api/v1"
 )
