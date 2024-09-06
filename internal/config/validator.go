@@ -16,7 +16,7 @@ type Validator struct {
 func NewValidator(viper *viper.Viper) *validator.Validate {
 	var validate = validator.New()
 	validate.RegisterValidation("filetypeimg", FileTypeImage)
-	validate.RegisterValidation("maxsize", fileSize)
+	validate.RegisterValidation("maxsize", FileSize)
 
 	return validate
 }
@@ -42,7 +42,7 @@ func FileTypeImage(fl validator.FieldLevel) bool {
 	return allowedTypes[fileExt]
 }
 
-func fileSize(fl validator.FieldLevel) bool {
+func FileSize(fl validator.FieldLevel) bool {
 	file, ok := fl.Field().Interface().(*multipart.FileHeader)
 	if !ok {
 		return false

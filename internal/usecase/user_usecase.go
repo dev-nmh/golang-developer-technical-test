@@ -6,7 +6,6 @@ import (
 	"github/golang-developer-technical-test/internal/model"
 	"github/golang-developer-technical-test/internal/model/converter"
 	"github/golang-developer-technical-test/internal/repository"
-	"github/golang-developer-technical-test/internal/util"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -87,29 +86,31 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 
 	var wg sync.WaitGroup
 	errChan := make(chan error, 2)
-	var base64FileKtp, base64FileSelfie string
+	var urlfileKtp, urlfileSelfie, fileNameKtp, fileNameSelfie string
 
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		base64, err := util.GetBytesFile(request.ImageKtp)
+
+		url, fileName, err := c.CloudinaryUploader.UploadFromMultipartHeader(request.ImageKtp)
 		if err != nil {
 			errChan <- err
 			return
 		}
-		base64FileKtp = base64
+		urlfileKtp = url
+		fileNameKtp = fileName
 	}()
 
 	go func() {
 		defer wg.Done()
-		// base64, err := util.GetBytesFile(request.ImageSelfie)
-		base64, err := c.CloudinaryUploader.UploadFromMultipartHeader(request.ImageSelfie)
+		url, fileName, err := c.CloudinaryUploader.UploadFromMultipartHeader(request.ImageSelfie)
 		if err != nil {
 			errChan <- err
 			return
 		}
-		base64FileSelfie = base64
+		urlfileSelfie = url
+		fileNameSelfie = fileName
 	}()
 
 	// Close errChan after all uploads are done
@@ -126,8 +127,9 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 		}
 	}
 
-	user.ImageKtp = base64FileKtp
-	user.ImageSelfie = base64FileSelfie
+	user.ImageKtp = fileNameKtp
+	user.ImageSelfie = fileNameSelfie
+
 	if err := c.UserRepository.Create(tx, user); err != nil {
 		c.Log.Warnf("Failed create user to database : %+v", err)
 		tx.Rollback()
@@ -138,6 +140,8 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 		return nil, echo.ErrInternalServerError
 	}
 
+	user.ImageKtp = urlfileKtp
+	user.ImageSelfie = urlfileSelfie
 	response := converter.UserToResponse(user)
 	return response, nil
 }

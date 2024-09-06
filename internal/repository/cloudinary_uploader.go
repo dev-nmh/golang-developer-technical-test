@@ -2,12 +2,8 @@ package repository
 
 import (
 	"context"
-	"io"
 	"log"
 	"mime/multipart"
-	"net/url"
-	"path"
-	"strings"
 
 	"braces.dev/errtrace"
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -27,72 +23,49 @@ func NewCloudinaryUploader(coudinary *cloudinary.Cloudinary, folderName string) 
 	}
 }
 
-func (cu *CloudinaryUploader) UploadFromBytes(ctx context.Context, file []byte, fileName string) (string, error) {
+func (cu *CloudinaryUploader) Upload(ctx context.Context, file interface{}, fileName string) (*uploader.UploadResult, error) {
 	uploadParams := uploader.UploadParams{
 		Folder:   cu.folderName,
 		PublicID: fileName,
 	}
 	log.Println("=========================Start Uploading Image=========================")
-	log.Println(cu.cld.Config)
 	result, err := cu.cld.Upload.Upload(ctx, file, uploadParams)
 	if err != nil {
-		return "", errtrace.Wrap(err)
+		return nil, errtrace.Wrap(err)
 	}
 	log.Println("Upload result:", result)
 	log.Println("Secure URL:", result.SecureURL)
+	log.Println("Display Name:", result.DisplayName)
+	log.Println("Format:", result.Format)
+	log.Println("Public ID:", result.PublicID)
+	log.Println("Type:", result.Type)
+
 	if result.SecureURL == "" {
 		log.Println("Warning: Secure URL is empty.")
 	}
 	log.Println("=========================End Uploading Image=========================")
 
-	return result.SecureURL, nil
+	return result, nil
 }
-func (cu *CloudinaryUploader) UploadFromMultipartHeader(file *multipart.FileHeader) (string, error) {
+func (cu *CloudinaryUploader) UploadFromMultipartHeader(file *multipart.FileHeader) (string, string, error) {
 	ctx := context.Background()
-	formFile, err := file.Open()
-
-	if err != nil {
-		return "", errtrace.Wrap(err)
-	}
-	defer formFile.Close()
-
-	fileBytes, err := io.ReadAll(formFile)
-	if err != nil {
-		return "", errtrace.Wrap(err)
-	}
 	id, err := uuid.NewV7()
 	if err != nil {
-		return "", errtrace.Wrap(err)
+		return "", "", errtrace.Wrap(err)
 	}
-	urlFile, errCloudinary := cu.UploadFromBytes(ctx, fileBytes, id.String())
+	result, errCloudinary := cu.Upload(ctx, file, id.String())
 	if errCloudinary != nil {
-		return "", errtrace.Wrap(err)
+		return "", "", errtrace.Wrap(err)
 	}
+	urlHttp := result.SecureURL
+	fileName := result.DisplayName + "." + result.Format
 
-	return urlFile, nil
+	return urlHttp, fileName, nil
 }
 
-func (cu *CloudinaryUploader) getPublicIDFromURL(imageURL string) (string, error) {
+func (cu *CloudinaryUploader) Delete(ctx context.Context, public_id string) error {
 
-	parsedURL, err := url.Parse(imageURL)
-	if err != nil {
-		return "", errtrace.Wrap(err)
-	}
+	_, err := cu.cld.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: public_id})
 
-	fileName := path.Base(parsedURL.Path)
-
-	// Remove the file extension (e.g., .jpg, .png)
-	publicID := strings.TrimSuffix(fileName, path.Ext(fileName))
-
-	return publicID, nil
-}
-func (cu *CloudinaryUploader) Delete(ctx context.Context, imageURL string) error {
-
-	publicID, err := cu.getPublicIDFromURL(imageURL)
-	if err != nil {
-		return errtrace.Wrap(err)
-	}
-
-	_, err = cu.cld.Upload.Destroy(ctx, uploader.DestroyParams{PublicID: publicID})
 	return errtrace.Wrap(err)
 }
