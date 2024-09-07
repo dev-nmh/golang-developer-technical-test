@@ -23,7 +23,7 @@ func main() {
 
 	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 	userUseCase := usecase.NewUserUseCase(DB, log, validator, userRepository, CloudinaryUploader)
-	userController := controller.NewUseController(log, userUseCase)
+	userController := controller.NewUserController(log, userUseCase)
 	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{

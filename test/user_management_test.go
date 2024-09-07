@@ -34,7 +34,7 @@ func TestRegister(t *testing.T) {
 
 	c := App.NewContext(request, response)
 	assert.Nil(t, err)
-	userController.Register(c)
+	userController.CreateProfile(c)
 	bytes, err := io.ReadAll(response.Body)
 	assert.Nil(t, err)
 

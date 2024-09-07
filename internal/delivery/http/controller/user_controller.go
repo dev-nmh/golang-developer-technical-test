@@ -17,14 +17,14 @@ type UserController struct {
 	UseCase *usecase.UserUseCase
 }
 
-func NewUseController(logger *logrus.Logger, useCase *usecase.UserUseCase) *UserController {
+func NewUserController(logger *logrus.Logger, useCase *usecase.UserUseCase) *UserController {
 	return &UserController{
 		Log:     logger,
 		UseCase: useCase,
 	}
 }
 
-func (c *UserController) Register(e echo.Context) error {
+func (c *UserController) CreateProfile(e echo.Context) error {
 
 	var req model.RegisterUserRequest
 

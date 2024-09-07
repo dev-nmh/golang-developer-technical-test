@@ -15,25 +15,29 @@ type RouteConfig struct {
 }
 
 func (c *RouteConfig) Setup() {
-
-	c.SetupPublic()
 	c.SetupApiKeyAuthRoute()
-	c.SetupJWTAuth()
-}
+	c.SetupAuthJwt()
+	c.SetupUserAuth()
+	c.SetupAdminAuth()
 
-func (c *RouteConfig) SetupPublic() {
-
-	// c.App.POST("/api/user", c.UserController.Register)
 }
 
 func (c *RouteConfig) SetupApiKeyAuthRoute() {
 	private := c.App.Group(config.PREFIX_API)
 	private.Use(c.Middleware.AuthApiKey)
-	private.POST("/user", c.UserController.Register)
+	private.POST("/user", c.UserController.CreateProfile)
+}
+func (c *RouteConfig) SetupAuthJwt() {
+
+}
+func (c *RouteConfig) SetupUserAuth() {
+	private := c.App.Group(config.PREFIX_API + "/admin")
+	private.Use(c.Middleware.AuthUserJWT)
+	// private.POST("/user", c.UserController.CreateProfile)
 }
 
-func (c *RouteConfig) SetupJWTAuth() {
-	private := c.App.Group(config.PREFIX_API + "/admin")
-	private.Use(c.Middleware.AuthApiKey)
-	private.POST("/user", c.UserController.Register)
+func (c *RouteConfig) SetupAdminAuth() {
+	private := c.App.Group(config.PREFIX_API)
+	private.Use(c.Middleware.AuthAdminJWT)
+	private.POST("/user", c.UserController.CreateProfile)
 }
