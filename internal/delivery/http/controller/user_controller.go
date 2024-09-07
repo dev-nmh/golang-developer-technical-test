@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"github/golang-developer-technical-test/internal/dto"
 	"github/golang-developer-technical-test/internal/model"
 	"github/golang-developer-technical-test/internal/usecase"
 
@@ -26,10 +25,11 @@ func NewUseController(logger *logrus.Logger, useCase *usecase.UserUseCase) *User
 }
 
 func (c *UserController) Register(e echo.Context) error {
-	response := new(dto.JSONResponse)
+
 	var req model.RegisterUserRequest
 
 	if err := e.Bind(&req); err != nil {
+		response := new(model.JSONResponse)
 		c.Log.Warnf("Failed to parse request body : %+v", err)
 		log.Println(err.Error())
 		response.StatusCode = http.StatusBadRequest
@@ -41,6 +41,7 @@ func (c *UserController) Register(e echo.Context) error {
 	if file, err := e.FormFile("image_selfie"); err == nil {
 		req.ImageSelfie = file
 	} else {
+		response := new(model.JSONResponse)
 		c.Log.Warnf("Failed to get image_selfie file: %+v", err)
 		response.StatusCode = http.StatusBadRequest
 		response.Message = "image_selfie file upload failed"
@@ -51,6 +52,7 @@ func (c *UserController) Register(e echo.Context) error {
 	if file, err := e.FormFile("image_ktp"); err == nil {
 		req.ImageKtp = file
 	} else {
+		response := new(model.JSONResponse)
 		c.Log.Warnf("Failed to get image_ktp file: %+v", err)
 		response.StatusCode = http.StatusBadRequest
 		response.Message = "image_ktp file upload failed"
@@ -59,22 +61,24 @@ func (c *UserController) Register(e echo.Context) error {
 	}
 
 	if err := e.Validate(req); err != nil {
-		c.Log.Warnf("Failed to get image_ktp file: %+v", err)
+		response := new(model.JSONResponse)
+		c.Log.Warnf("Failed For Validate %+v", err)
 		response.StatusCode = http.StatusBadRequest
 		response.Message = "Data Not Valid"
-		response.Data = err.Error()
+		response.Data = nil
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
-	c.Log.Println("Working")
-	_, err := c.UseCase.Create(e.Request().Context(), &req)
+	record, err := c.UseCase.Create(e.Request().Context(), &req)
 	if err != nil {
 		c.Log.Warnf("Failed to create user: %+v", err)
+		response := new(model.JSONResponse)
 		response.StatusCode = http.StatusInternalServerError
 		response.Message = "Failed to create user"
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
+	response := new(model.JSONResponseGenerics[model.UserResponseDetail])
 	response.StatusCode = http.StatusCreated
 	response.Message = "User created successfully"
-	response.Data = nil
+	response.Data = record
 	return errtrace.Wrap(e.JSON(response.StatusCode, response))
 }

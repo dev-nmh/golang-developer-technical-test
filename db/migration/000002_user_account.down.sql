@@ -1,0 +1,9 @@
+SET FOREIGN_KEY_CHECKS=0;
+TRUNCATE TABLE ms_billing_status;
+
+TRUNCATE TABLE ms_payment_status;
+
+TRUNCATE TABLE ms_source;
+TRUNCATE TABLE ms_tenor;
+
+SET FOREIGN_KEY_CHECKS=1;

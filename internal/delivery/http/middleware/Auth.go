@@ -1,18 +1,29 @@
 package middleware
 
 import (
+	"github/golang-developer-technical-test/internal/model"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
-func AuthApiKey(next echo.HandlerFunc) echo.HandlerFunc {
+type Middleware struct {
+	config *viper.Viper
+}
+
+func NewMiddleware(cfg *viper.Viper) *Middleware {
+	return &Middleware{config: cfg}
+}
+func (m Middleware) AuthApiKey(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		key := viper.GetString("app.api_key")
+		key := m.config.GetString("app.api_key")
 		apiKey := c.Request().Header.Get("X-API-KEY")
 		if apiKey != key { // Replace "secret" with your actual API key logic.
-			return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid API Key"})
+			var response model.JSONResponse
+			response.Data = http.StatusText(http.StatusUnauthorized)
+			response.StatusCode = http.StatusUnauthorized
+			return c.JSON(http.StatusUnauthorized, response)
 		}
 		return next(c)
 	}

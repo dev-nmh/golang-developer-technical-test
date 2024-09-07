@@ -3,6 +3,7 @@ package main
 import (
 	"github/golang-developer-technical-test/internal/config"
 	"github/golang-developer-technical-test/internal/delivery/http/controller"
+	"github/golang-developer-technical-test/internal/delivery/http/middleware"
 	"github/golang-developer-technical-test/internal/delivery/http/route"
 	"github/golang-developer-technical-test/internal/repository"
 	"github/golang-developer-technical-test/internal/usecase"
@@ -16,20 +17,21 @@ func main() {
 	validator := config.NewValidator(viperConfig)
 	coudinary := config.NewCloudinary(viperConfig)
 
-	EchoContext := config.NewEcho(viperConfig, log, validator)
+	App := config.NewEcho(viperConfig, log, validator)
 
 	userRepository := repository.NewUserRepository(log)
-	log.Println(viperConfig)
-	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 
+	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 	userUseCase := usecase.NewUserUseCase(DB, log, validator, userRepository, CloudinaryUploader)
 	userController := controller.NewUseController(log, userUseCase)
+	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{
-		App:            EchoContext,
+		App:            App,
 		UserController: userController,
+		Middleware:     middleware,
 	}
 
 	routeConfig.Setup()
-	EchoContext.Logger.Info(EchoContext.Start(":" + viperConfig.GetString("web.port")))
+	App.Logger.Info(App.Start(":" + viperConfig.GetString("web.port")))
 }
