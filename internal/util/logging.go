@@ -47,7 +47,8 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 				"error": err.Error(),
 				"path":  c.Request().URL.Path,
 			}).Error("Unexpected error occurred")
-			c.JSON(http.StatusInternalServerError, map[string]string{"message": "Internal Server Error"})
+
+			c.JSON(http.StatusInternalServerError, CreateResponse(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), nil))
 		}
 	}
 }

@@ -7,7 +7,5 @@ run:
 build:
 	go build ./cmd/web/main.go
 
-
-run-linter:
-	echo "Starting linters"
-	golangci-lint run ./...
+run-test:
+	go test -v ./test/ 
