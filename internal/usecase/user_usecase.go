@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"github/golang-developer-technical-test/internal/constant"
 	"github/golang-developer-technical-test/internal/entity"
 	"github/golang-developer-technical-test/internal/model"
 	"github/golang-developer-technical-test/internal/model/converter"
@@ -72,13 +73,15 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 		return nil, echo.ErrInternalServerError
 	}
 	user := &entity.MsUser{
-		PkMsUser:   id,
-		Nik:        request.Nik,
-		FullName:   request.FullName,
-		LegalName:  request.LegalName,
-		BirthPlace: request.BirthPlace,
-		BirthDate:  request.BirthDate,
-		Salary:     request.Salary,
+		PkMsUser:           id,
+		FkMsAccount:        request.FkMsAccount,
+		FkMsApprovalStatus: constant.APPROVAL_STATUS,
+		Nik:                request.Nik,
+		FullName:           request.FullName,
+		LegalName:          request.LegalName,
+		BirthPlace:         request.BirthPlace,
+		BirthDate:          request.BirthDate,
+		Salary:             request.Salary,
 		Stamp: entity.Stamp{
 			CreatedBy: id.String(),
 			UpdatedBy: id.String(),

@@ -3,11 +3,12 @@ package controller
 import (
 	"github/golang-developer-technical-test/internal/model"
 	"github/golang-developer-technical-test/internal/usecase"
+	"github/golang-developer-technical-test/internal/util"
 
-	"log"
 	"net/http"
 
 	"braces.dev/errtrace"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -27,14 +28,29 @@ func NewUserController(logger *logrus.Logger, useCase *usecase.UserUseCase) *Use
 func (c *UserController) CreateProfile(e echo.Context) error {
 
 	var req model.RegisterUserRequest
+	if claim, err := util.NewClaimUtil(e); err != nil {
+		response := util.CreateResponse(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil)
+		return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	} else {
+		response := util.CreateResponse(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil)
+
+		if userId, err := claim.GetUserId(); err != nil {
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+		} else if userId != uuid.Nil {
+			response.Message = "User Has Created Profile"
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+		}
+		if accountId, err := claim.GetId(); err != nil {
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+		} else {
+			req.FkMsAccount = accountId
+		}
+
+	}
 
 	if err := e.Bind(&req); err != nil {
-		response := new(model.JSONResponse)
+		response := util.CreateResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), nil)
 		c.Log.Warnf("Failed to parse request body : %+v", err)
-		log.Println(err.Error())
-		response.StatusCode = http.StatusBadRequest
-		response.Message = "Bad Request"
-		response.Data = nil
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
 
@@ -75,10 +91,12 @@ func (c *UserController) CreateProfile(e echo.Context) error {
 		response.StatusCode = http.StatusInternalServerError
 		response.Message = "Failed to create user"
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	} else {
+		response := new(model.JSONResponseGenerics[model.UserResponseDetail])
+		response.StatusCode = http.StatusCreated
+		response.Message = "User created successfully"
+		response.Data = record
+		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
-	response := new(model.JSONResponseGenerics[model.UserResponseDetail])
-	response.StatusCode = http.StatusCreated
-	response.Message = "User created successfully"
-	response.Data = record
-	return errtrace.Wrap(e.JSON(response.StatusCode, response))
+
 }

@@ -39,7 +39,7 @@ ALTER TABLE ms_user
 ADD COLUMN `fk_ms_account` VARCHAR(36) UNIQUE NOT NULL AFTER `pk_ms_user`;
 
 ALTER TABLE ms_user
-ADD COLUMN `fk_ms_approval_status`  int NOT NULL AFTER `fk_ms_account`;
+ADD COLUMN `fk_ms_approval_status`  int NOT NULL AFTER `fk_ms_account` ON DELETE CASCADE;
 
 
 

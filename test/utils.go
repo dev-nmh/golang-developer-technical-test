@@ -3,12 +3,16 @@ package test
 import (
 	"bytes"
 	"fmt"
+	"github/golang-developer-technical-test/internal/constant"
 	"github/golang-developer-technical-test/internal/entity"
 	"github/golang-developer-technical-test/internal/model"
+	"github/golang-developer-technical-test/internal/util"
 	"io"
 	"mime/multipart"
 	"os"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func createMultipartUser(data model.UserData, withKtp bool, withSelfie bool) (*bytes.Buffer, string, error) {
@@ -88,4 +92,47 @@ func clearUsers() {
 	if err != nil {
 		log.Fatalf("Failed clear user data : %+v", err)
 	}
+}
+
+func clearAccountUser() {
+	err := db.Where("pk_ms_account is not null AND fk_ms_role = 1 ").Delete(&entity.MsAccount{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear user data : %+v", err)
+	}
+}
+func clearAccountAdmin() {
+	err := db.Where("pk_ms_account is not null AND fk_ms_role = 2 ").Delete(&entity.MsAccount{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear user data : %+v", err)
+	}
+}
+
+func CreateAdmin() (*entity.MsAccount, error) {
+	request := model.AccoutRequest{Email: "admin@mail.com", Password: "admin"}
+	salt := uuid.New().String()
+	if hashPassword, err := util.HashPassword(viperConfig.GetString("app.app_key") + request.Password + salt); err != nil {
+		return nil, err
+	} else {
+		request.Password = hashPassword
+	}
+	accountId, err := uuid.NewV7()
+	if err != nil {
+		return nil, err
+	}
+	entity := &entity.MsAccount{
+		PkMsAccount:  accountId,
+		FkMsRole:     constant.USER_ROLES_ADMIN_INT,
+		Password:     request.Password,
+		PasswordSalt: salt,
+		Email:        request.Email,
+		Stamp: entity.Stamp{
+			CreatedBy: accountId.String(),
+			UpdatedBy: accountId.String(),
+		},
+	}
+	if err := accountRepository.Create(db, entity); err != nil {
+		return nil, err
+	}
+
+	return entity, nil
 }

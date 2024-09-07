@@ -35,7 +35,7 @@ func (r *Repository[T]) CountByWhere(db *gorm.DB, where map[string]interface{}) 
 	return total, tx.Error
 }
 
-func (r *Repository[T]) FindById(db *gorm.DB, entity *T, where map[string]interface{}) error {
+func (r *Repository[T]) FindByWhere(db *gorm.DB, entity *T, where map[string]interface{}) error {
 	tx := db.Model(new(T))
 	for key, val := range where {
 		if val != nil {

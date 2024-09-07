@@ -21,6 +21,8 @@ var log *logrus.Logger
 var coudinary *cloudinary.Cloudinary
 var App *echo.Echo
 var userController *controller.UserController
+var accountController *controller.AccountController
+var accountRepository *repository.AccountRepository
 
 func init() {
 	config.InitCache()
@@ -29,20 +31,26 @@ func init() {
 	db = config.NewDatabase(viperConfig, log)
 	validator := config.NewValidator(viperConfig)
 	coudinary = config.NewCloudinary(viperConfig)
-
+	jwtGenerator := config.NewJwtGenerator(viperConfig)
 	App = config.NewEcho(viperConfig, log, validator)
-
-	userRepository := repository.NewUserRepository(log)
+	log.Println(jwtGenerator)
 	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
+	userRepository := repository.NewUserRepository(log)
+	accountRepository = repository.NewAccountRepository(log)
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
+	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
+
 	userController = controller.NewUserController(log, userUseCase)
+	accountController = controller.NewAccountController(log, accountUseCase)
+
 	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{
-		App:            App,
-		UserController: userController,
-		Middleware:     middleware,
+		App:               App,
+		UserController:    userController,
+		AccountController: accountController,
+		Middleware:        middleware,
 	}
 
 	routeConfig.Setup()

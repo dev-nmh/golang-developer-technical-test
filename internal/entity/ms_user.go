@@ -24,3 +24,4 @@ type MsUser struct {
 func (e *MsUser) TableName() string {
 	return "ms_user"
 }
+
