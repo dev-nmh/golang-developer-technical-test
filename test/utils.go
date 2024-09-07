@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github/golang-developer-technical-test/internal/entity"
 	"github/golang-developer-technical-test/internal/model"
+	"io"
 	"mime/multipart"
 	"os"
 	"time"
@@ -22,10 +23,10 @@ func createMultipartUser(data model.UserData, withKtp bool, withSelfie bool) (*b
 	addField(writer, "salary", fmt.Sprintf("%d", data.Salary))
 
 	if withKtp {
-		FilePathToMultipart(KTP_IMG, "image_ktp", writer)
+		filePathToMultipart(KTP_IMG, "image_ktp", writer)
 	}
 	if withSelfie {
-		FilePathToMultipart(SELFIE_IMG, "image_selfie", writer)
+		filePathToMultipart(SELFIE_IMG, "image_selfie", writer)
 	}
 
 	err := writer.Close()
@@ -35,7 +36,7 @@ func createMultipartUser(data model.UserData, withKtp bool, withSelfie bool) (*b
 	return &b, writer.FormDataContentType(), nil
 }
 
-func FilePathToMultipart(filePath string, formName string, writer *multipart.Writer) error {
+func filePathToMultipart(filePath string, formName string, writer *multipart.Writer) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -52,7 +53,7 @@ func FilePathToMultipart(filePath string, formName string, writer *multipart.Wri
 		return err
 	}
 
-	_, err = filePart.Write(make([]byte, fileInfo.Size()))
+	_, err = io.Copy(filePart, file)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func addField(w *multipart.Writer, fieldName, value string) {
 	}
 }
 
-func ClearUsers() {
+func clearUsers() {
 	err := db.Where("pk_ms_user is not null").Delete(&entity.MsUser{}).Error
 	if err != nil {
 		log.Fatalf("Failed clear user data : %+v", err)

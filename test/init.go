@@ -3,6 +3,7 @@ package test
 import (
 	"github/golang-developer-technical-test/internal/config"
 	"github/golang-developer-technical-test/internal/delivery/http/controller"
+	"github/golang-developer-technical-test/internal/delivery/http/middleware"
 	"github/golang-developer-technical-test/internal/delivery/http/route"
 	"github/golang-developer-technical-test/internal/repository"
 	"github/golang-developer-technical-test/internal/usecase"
@@ -18,8 +19,8 @@ var db *gorm.DB
 var viperConfig *viper.Viper
 var log *logrus.Logger
 var coudinary *cloudinary.Cloudinary
-var EchoContext *echo.Echo
-var UserController *controller.UserController
+var App *echo.Echo
+var userController *controller.UserController
 
 func init() {
 	config.InitCache()
@@ -29,17 +30,19 @@ func init() {
 	validator := config.NewValidator(viperConfig)
 	coudinary = config.NewCloudinary(viperConfig)
 
-	EchoContext = config.NewEcho(viperConfig, log, validator)
+	App = config.NewEcho(viperConfig, log, validator)
 
 	userRepository := repository.NewUserRepository(log)
 	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
-	UserController = controller.NewUseController(log, userUseCase)
+	userController = controller.NewUseController(log, userUseCase)
+	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{
-		App:            EchoContext,
-		UserController: UserController,
+		App:            App,
+		UserController: userController,
+		Middleware:     middleware,
 	}
 
 	routeConfig.Setup()

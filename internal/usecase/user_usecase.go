@@ -8,6 +8,7 @@ import (
 	"github/golang-developer-technical-test/internal/repository"
 	"sync"
 
+	"braces.dev/errtrace"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -98,6 +99,10 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 			errChan <- err
 			return
 		}
+		if url == "" {
+			errChan <- errtrace.New("Failed To Upload Image")
+			return
+		}
 		urlfileKtp = url
 		fileNameKtp = fileName
 	}()
@@ -107,6 +112,10 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 		url, fileName, err := c.CloudinaryUploader.UploadFromMultipartHeader(request.ImageSelfie)
 		if err != nil {
 			errChan <- err
+			return
+		}
+		if url == "" {
+			errChan <- errtrace.New("Failed To Upload Image")
 			return
 		}
 		urlfileSelfie = url

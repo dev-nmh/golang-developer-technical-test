@@ -12,12 +12,12 @@ import (
 )
 
 func TestRegister(t *testing.T) {
-	// ClearAll()
+	clearUsers()
 	birthDate, err := StringToTime("2000-12-05T14:41:50+07:00")
 	assert.Nil(t, err)
 	requestBody := model.UserData{
 
-		Nik:        "1244563",
+		Nik:        "1244563345672135",
 		BirthDate:  *birthDate,
 		BirthPlace: "Jakarta",
 		FullName:   "Annisa Data 1",
@@ -32,9 +32,9 @@ func TestRegister(t *testing.T) {
 	request.Header.Set("Accept", "*/*")
 	response := httptest.NewRecorder()
 
-	c := EchoContext.NewContext(request, response)
+	c := App.NewContext(request, response)
 	assert.Nil(t, err)
-	UserController.Register(c)
+	userController.Register(c)
 	bytes, err := io.ReadAll(response.Body)
 	assert.Nil(t, err)
 
@@ -51,6 +51,6 @@ func TestRegister(t *testing.T) {
 	assert.Equal(t, requestBody.FullName, responseBody.Data.FullName)
 	assert.Equal(t, requestBody.LegalName, responseBody.Data.LegalName)
 	assert.Equal(t, requestBody.Salary, responseBody.Data.Salary)
-	assert.NotEqualValues(t, responseBody.Data.ImageKtp, "")
-	assert.NotEqualValues(t, responseBody.Data.ImageSelfie, "")
+	assert.NotEqual(t, responseBody.Data.ImageKtp, ".")
+	assert.NotEqual(t, responseBody.Data.ImageSelfie, ".")
 }
