@@ -40,16 +40,15 @@ func (m Middleware) AuthApiKey(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func (m Middleware) BaseAuth(e echo.Context) error {
-	response := util.CreateResponse(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil)
 
 	if authorization := e.Request().Header.Get("Authorization"); authorization != "" {
 		authorizationToken := strings.Split(authorization, " ")
 		if len(authorizationToken) != 2 {
-			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			return errtrace.Wrap(echo.ErrUnauthorized)
 		}
 
 		if authorizationToken[0] != "Bearer" {
-			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			return errtrace.Wrap(echo.ErrUnauthorized)
 		}
 
 		e.Set("RawToken", authorizationToken[1])
@@ -61,35 +60,36 @@ func (m Middleware) BaseAuth(e echo.Context) error {
 		})
 
 		if err != nil {
-			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			return errtrace.Wrap(echo.ErrUnauthorized)
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 
 		if !ok || !token.Valid {
-			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			return errtrace.Wrap(echo.ErrUnauthorized)
 		}
 		times := strconv.FormatFloat(claims["exp"].(float64), 'f', 0, 64)
 		timeint64, _ := strconv.ParseInt(times, 10, 64)
 		expired := time.Unix(timeint64, 0).In(time.Local)
 
 		if time.Now().After(expired) {
-			response.Message = "Token Expired"
-			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			return errtrace.Wrap(echo.ErrUnauthorized)
 		}
 
 		e.Set("Authorization", claims)
 		return errtrace.Wrap(nil)
 	}
-	return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	return errtrace.Wrap(echo.ErrUnauthorized)
 }
 func (m Middleware) AuthBaseAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(e echo.Context) error {
 		err := m.BaseAuth(e)
 		if err != nil {
 			return errtrace.Wrap(err)
+		} else {
+			return errtrace.Wrap(next(e))
+
 		}
-		return errtrace.Wrap(next(e))
 	}
 
 }
@@ -98,7 +98,14 @@ func (m Middleware) AuthAdminJWT(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(e echo.Context) error {
 		err := m.BaseAuth(e)
 		if err != nil {
-			return errtrace.Wrap(err)
+			response := new(model.JSONResponse)
+			response.StatusCode = http.StatusUnauthorized
+			if httpError, ok := err.(*echo.HTTPError); ok {
+				response.StatusCode = httpError.Code
+				response.Message = httpError.Message.(string)
+				return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			}
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
 		} else {
 			claims := e.Get("Authorization").(jwt.MapClaims)
 
@@ -118,7 +125,15 @@ func (m Middleware) AuthUserJWT(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(e echo.Context) error {
 		err := m.BaseAuth(e)
 		if err != nil {
-			return errtrace.Wrap(err)
+			response := new(model.JSONResponse)
+			response.StatusCode = http.StatusUnauthorized
+			response.Message = http.StatusText(http.StatusUnauthorized)
+			if httpError, ok := err.(*echo.HTTPError); ok {
+				response.StatusCode = httpError.Code
+				response.Message = httpError.Message.(string)
+				return errtrace.Wrap(e.JSON(response.StatusCode, response))
+			}
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
 		} else {
 			claims := e.Get("Authorization").(jwt.MapClaims)
 

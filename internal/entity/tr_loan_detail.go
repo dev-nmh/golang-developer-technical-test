@@ -12,7 +12,7 @@ type TrLoanDetail struct {
 	FkMsSource      string    `gorm:"column:fk_ms_source"`
 	FkMapUserTenor  uuid.UUID `gorm:"column:fk_map_user_tenor"`
 	OtrAmount       float64   `gorm:"column:otr_amount"`
-	LoanBalance     float64   `gorm:"column:fk_ms_source"`
+	LoanBalance     float64   `gorm:"column:loan_balance"`
 	TransactionDate time.Time `gorm:"column:transaction_date"`
 	DueDate         time.Time `gorm:"column:due_date"`
 

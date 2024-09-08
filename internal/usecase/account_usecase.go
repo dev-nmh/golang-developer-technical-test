@@ -113,6 +113,10 @@ func (acc *AccountUseCase) Verify(ctx context.Context, request *model.AccoutRequ
 		"email": request.Email,
 	})
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, echo.ErrNotFound
+
+		}
 		return nil, echo.ErrInternalServerError
 	}
 	if (record == entity.MsAccount{}) {

@@ -66,7 +66,7 @@ func (tlc TranscationLoanController) UserCreateLoanTransaction(e echo.Context) e
 	}
 	data, cd, err := tlc.useCase.CreateLoan(e.Request().Context(), &req)
 	if err != nil {
-		tlc.log.Warnf("Failed to create user: %+v", err)
+		tlc.log.Warnf("Failed to create Loan: %+v", err)
 		response := new(model.JSONResponse)
 		response.StatusCode = http.StatusInternalServerError
 		if cd == 0 {

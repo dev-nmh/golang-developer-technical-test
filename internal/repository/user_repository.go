@@ -23,7 +23,7 @@ func (ur UserRepository) GetApprovalStatusById(db *gorm.DB, pkMsUser uuid.UUID) 
 	var approvalStatus int
 	if err := db.Model(entity.MsUser{
 		PkMsUser: pkMsUser,
-	}).Scan(approvalStatus).Error; err != nil {
+	}).Select("fk_ms_approval_status").Scan(&approvalStatus).Error; err != nil {
 		return 0, err
 	}
 	return approvalStatus, nil

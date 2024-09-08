@@ -38,6 +38,9 @@ func init() {
 	userRepository := repository.NewUserRepository(log)
 	accountRepository = repository.NewAccountRepository(log)
 	mapUserTenorRepository := repository.NewUserTenorRepository(log)
+	transcationLoanRepository := repository.NewTranscationLoanRepository(log)
+	tenorLoanRepository := repository.NewTenorRepository(log)
+	sourceRepository := repository.NewSourceRepository(log)
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
 	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
@@ -49,12 +52,16 @@ func init() {
 	loanController := controller.NewLoanController(log, loanUseCase)
 	middleware := middleware.NewMiddleware(viperConfig)
 
+	transcationLoanUseCase := usecase.NewTranscationLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository, transcationLoanRepository, tenorLoanRepository, sourceRepository)
+	transcationLoanController := controller.NewTranscationLoanController(log, transcationLoanUseCase)
+
 	routeConfig := route.RouteConfig{
-		App:               App,
-		UserController:    userController,
-		LoanController:    loanController,
-		AccountController: accountController,
-		Middleware:        middleware,
+		App:                       App,
+		UserController:            userController,
+		AccountController:         accountController,
+		LoanController:            loanController,
+		Middleware:                middleware,
+		TranscationLoanController: transcationLoanController,
 	}
 
 	routeConfig.Setup()

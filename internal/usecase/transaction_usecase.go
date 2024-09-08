@@ -46,7 +46,7 @@ func NewTranscationLoanUseCase(db *gorm.DB, log *logrus.Logger, validate *valida
 func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.RequestLoan) (interface{}, int, error) {
 	tx := c.db.WithContext(ctx).Begin()
 	defer tx.Rollback()
-
+	c.log.Println("Masuk Pak eko -1")
 	if approvalStatus, err := c.userRepository.GetApprovalStatusById(tx, req.FkMsUser); err != nil {
 		c.log.Warnf("Failed to get approvalStatus: %+v", err)
 		return nil, http.StatusInternalServerError, errtrace.Wrap(err)
@@ -57,33 +57,39 @@ func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.Reque
 	var tenorLimit entity.MsTenor
 	var userLimitTenor entity.MapUserTenor
 	var source entity.MsSource
+	c.log.Println("Masuk Pak eko 0")
 
-	var total float64
+	var total *float64
 	if err := c.userTenorRepository.FindByWhere(tx, &userLimitTenor, map[string]interface{}{
 		"fk_ms_user":  req.FkMsUser,
 		"fk_ms_tenor": req.TenorId,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
+	c.log.Println("Masuk Pak eko 1")
 	if err := c.tenorLoanRepository.FindByWhere(tx, &tenorLimit, map[string]interface{}{
 		"pk_ms_tenor": req.TenorId,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
+	c.log.Println("Masuk Pak eko 2")
 	if err := c.sourceRepository.FindByWhere(tx, &source, map[string]interface{}{
 		"pk_ms_source": req.FkMsSource,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
-
+	c.log.Println("Masuk Pak eko 3")
 	total, err := c.transcationLoanRepository.GetTotalNotPaidLoanByUserTenorId(tx, req.FkMsUser)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, http.StatusInternalServerError, errtrace.Wrap(err)
 		}
 	}
-	if req.OtrAmount > total {
-		return nil, http.StatusNotAcceptable, errtrace.Wrap(err)
+	if total != nil {
+		if req.OtrAmount > *total {
+			return nil, http.StatusNotAcceptable, errtrace.Wrap(err)
+
+		}
 	}
 	headerId, _ := uuid.NewV7()
 	now := time.Now()
@@ -108,7 +114,7 @@ func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.Reque
 		FkMsSource:      req.FkMsSource,
 		FkMapUserTenor:  userLimitTenor.PkMapUserTenor,
 		OtrAmount:       req.OtrAmount,
-		LoanBalance:     util.GenerateBasicInterest(req.OtrAmount, tenorLimit.InterestRatePercent, float64(tenorLimit.TenorMonths), source.AdminFee),
+		LoanBalance:     req.OtrAmount + util.GenerateBasicInterest(req.OtrAmount, tenorLimit.InterestRatePercent, float64(tenorLimit.TenorMonths), source.AdminFee),
 		TransactionDate: now,
 		DueDate:         now.Local().AddDate(0, tenorLimit.TenorMonths, 0),
 		Stamp:           stamp,
