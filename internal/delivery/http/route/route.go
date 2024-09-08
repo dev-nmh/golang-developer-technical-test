@@ -9,11 +9,13 @@ import (
 )
 
 type RouteConfig struct {
-	App               *echo.Echo
-	UserController    *controller.UserController
-	AccountController *controller.AccountController
-	LoanController    *controller.LoanController
-	Middleware        *middleware.Middleware
+	App                       *echo.Echo
+	UserController            *controller.UserController
+	AccountController         *controller.AccountController
+	LoanController            *controller.LoanController
+	TranscationLoanController *controller.TranscationLoanController
+
+	Middleware *middleware.Middleware
 }
 
 func (c *RouteConfig) Setup() {
@@ -38,6 +40,9 @@ func (c *RouteConfig) SetupAdminAuth() {
 }
 
 func (c *RouteConfig) SetupUserAuth() {
-	private := c.App.Group(constant.PREFIX_API)
-	private.POST("/user", c.UserController.CreateProfile, c.Middleware.AuthUserJWT)
+	private := c.App.Group(constant.PREFIX_API + "/user")
+	private.Use(c.Middleware.AuthUserJWT)
+	private.POST("/profile", c.UserController.CreateProfile)
+	private.POST("/loan", c.TranscationLoanController.UserCreateLoanTransaction)
+
 }

@@ -85,6 +85,7 @@ CREATE TABLE map_user_tenor(
     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
     `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+    UNIQUE(fk_ms_user,fk_ms_tenor)
 )ENGINE=InnoDB;
 
 
