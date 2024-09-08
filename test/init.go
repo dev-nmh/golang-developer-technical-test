@@ -37,14 +37,16 @@ func init() {
 	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 	userRepository := repository.NewUserRepository(log)
 	accountRepository = repository.NewAccountRepository(log)
+	mapUserTenorRepository := repository.NewUserTenorRepository(log)
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
 	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
 
 	userController = controller.NewUserController(log, userUseCase)
 	accountController = controller.NewAccountController(log, accountUseCase)
-	loanController := controller.NewLoanController(log, nil)
 
+	loanUseCase := usecase.NewLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository)
+	loanController := controller.NewLoanController(log, loanUseCase)
 	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{

@@ -29,8 +29,8 @@ func main() {
 	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
 	accountController := controller.NewAccountController(log, accountUseCase)
 
-	LoanUseCase := usecase.NewLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository)
-	loanController := controller.NewLoanController(log, LoanUseCase)
+	loanUseCase := usecase.NewLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository)
+	loanController := controller.NewLoanController(log, loanUseCase)
 
 	middleware := middleware.NewMiddleware(viperConfig)
 
