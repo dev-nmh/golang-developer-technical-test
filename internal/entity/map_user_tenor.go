@@ -5,7 +5,7 @@ import "github.com/google/uuid"
 type MapUserTenor struct {
 	PkMapUserTenor uuid.UUID `gorm:"column:pk_map_user_tenor;primaryKey"`
 	FkMsUser       uuid.UUID `gorm:"column:fk_ms_user"`
-	FkMsTenor      uuid.UUID `gorm:"column:fk_ms_tenor"`
+	FkMsTenor      string    `gorm:"column:fk_ms_tenor"`
 	Amount         float64   `gorm:"column:amount"`
 	Stamp
 }

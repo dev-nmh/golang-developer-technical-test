@@ -24,7 +24,7 @@ func TestRegisterAccount(t *testing.T) {
 	h := model.AccoutRequest{Email: "naufal@mail.com", Password: "user"}
 	d, _ := json.Marshal(h)
 
-	request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/register", bytes.NewBuffer(d))
+	request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/public/register", bytes.NewBuffer(d))
 	request.Header.Set("Content-Type", ContentTypeJSON)
 	request.Header.Set("Accept", "*/*")
 	request.Header.Set("X-API-KEY", viperConfig.GetString("app.api_key"))

@@ -75,7 +75,7 @@ func (c *UserUseCase) Create(ctx context.Context, request *model.RegisterUserReq
 	user := &entity.MsUser{
 		PkMsUser:           id,
 		FkMsAccount:        request.FkMsAccount,
-		FkMsApprovalStatus: constant.APPROVAL_STATUS,
+		FkMsApprovalStatus: constant.APPROVAL_STATUS_REQEUSTED,
 		Nik:                request.Nik,
 		FullName:           request.FullName,
 		LegalName:          request.LegalName,

@@ -27,13 +27,15 @@ func (m Middleware) AuthApiKey(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		key := m.config.GetString("app.api_key")
 		apiKey := c.Request().Header.Get("X-API-KEY")
-		if apiKey != key { // Replace "secret" with your actual API key logic.
+		if apiKey != key {
 			var response model.JSONResponse
-			response.Data = http.StatusText(http.StatusUnauthorized)
+			response.Message = http.StatusText(http.StatusUnauthorized)
 			response.StatusCode = http.StatusUnauthorized
 			return errtrace.Wrap(c.JSON(http.StatusUnauthorized, response))
+		} else {
+			return errtrace.Wrap(next(c))
+
 		}
-		return errtrace.Wrap(next(c))
 	}
 }
 

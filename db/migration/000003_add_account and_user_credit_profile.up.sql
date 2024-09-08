@@ -39,7 +39,7 @@ ALTER TABLE ms_user
 ADD COLUMN `fk_ms_account` VARCHAR(36) UNIQUE NOT NULL AFTER `pk_ms_user`;
 
 ALTER TABLE ms_user
-ADD COLUMN `fk_ms_approval_status`  int NOT NULL AFTER `fk_ms_account` ON DELETE CASCADE;
+ADD COLUMN `fk_ms_approval_status`  int NOT NULL AFTER `fk_ms_account`;
 
 
 
@@ -49,12 +49,11 @@ ADD CONSTRAINT role_ms_account FOREIGN KEY (fk_ms_role) REFERENCES ms_role(pk_ms
 ALTER TABLE ms_user 
 ADD CONSTRAINT approval_status_ms_user FOREIGN KEY (fk_ms_approval_status) REFERENCES ms_approval_status(pk_ms_approval_status);
 ALTER TABLE ms_user
-ADD CONSTRAINT account_ms_user FOREIGN KEY (fk_ms_account) REFERENCES ms_account(pk_ms_account);
+ADD CONSTRAINT account_ms_user FOREIGN KEY (fk_ms_account) REFERENCES ms_account(pk_ms_account) ON DELETE CASCADE;
 
 
 INSERT INTO ms_approval_status(title,description)
 VALUES ("REQUESTED","user is sending request account loan"),
-       ("UNDER_REVIEWED","users is under review"),
        ("APPROVED","user request is approved"),
        ("REJECTED","user request is rejected");
 

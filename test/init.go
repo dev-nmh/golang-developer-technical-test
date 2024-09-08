@@ -43,12 +43,14 @@ func init() {
 
 	userController = controller.NewUserController(log, userUseCase)
 	accountController = controller.NewAccountController(log, accountUseCase)
+	loanController := controller.NewLoanController(log, nil)
 
 	middleware := middleware.NewMiddleware(viperConfig)
 
 	routeConfig := route.RouteConfig{
 		App:               App,
 		UserController:    userController,
+		LoanController:    loanController,
 		AccountController: accountController,
 		Middleware:        middleware,
 	}

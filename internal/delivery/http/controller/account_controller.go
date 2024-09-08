@@ -93,7 +93,3 @@ func (c *AccountController) Auth(e echo.Context) error {
 	response.Data = record
 	return errtrace.Wrap(e.JSON(response.StatusCode, response))
 }
-
-func (c *AccountController) LoginAdmin(e echo.Context) error {
-	return nil
-}

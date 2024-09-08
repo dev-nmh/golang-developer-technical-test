@@ -12,12 +12,12 @@ type RouteConfig struct {
 	App               *echo.Echo
 	UserController    *controller.UserController
 	AccountController *controller.AccountController
+	LoanController    *controller.LoanController
 	Middleware        *middleware.Middleware
 }
 
 func (c *RouteConfig) Setup() {
 	c.SetupApiKeyAuthRoute()
-	c.SetupAuthJwt()
 	c.SetupUserAuth()
 	c.SetupAdminAuth()
 
@@ -30,17 +30,14 @@ func (c *RouteConfig) SetupApiKeyAuthRoute() {
 	private.POST("/register", c.AccountController.Register)
 
 }
-func (c *RouteConfig) SetupAuthJwt() {
 
-}
 func (c *RouteConfig) SetupAdminAuth() {
 	private := c.App.Group(constant.PREFIX_API + "/admin")
 	private.Use(c.Middleware.AuthAdminJWT)
-	// private.POST("/user", c.UserController.CreateProfile)
+	private.POST("/user/:user_id/approval", c.LoanController.ApprovalUser)
 }
 
 func (c *RouteConfig) SetupUserAuth() {
 	private := c.App.Group(constant.PREFIX_API)
-	private.Use(c.Middleware.AuthUserJWT)
-	private.POST("/user", c.UserController.CreateProfile)
+	private.POST("/user", c.UserController.CreateProfile, c.Middleware.AuthUserJWT)
 }

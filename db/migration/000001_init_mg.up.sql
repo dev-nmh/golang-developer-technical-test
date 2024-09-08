@@ -77,8 +77,8 @@ CREATE TABLE ms_tenor(
 
 CREATE TABLE map_user_tenor(
     `pk_map_user_tenor` varchar(36) UNIQUE NOT NULL PRIMARY KEY,
-    `fk_ms_user` varchar(36) UNIQUE NOT NULL,
-    `fk_ms_tenor` varchar(36) UNIQUE NOT NULL,
+    `fk_ms_user` varchar(36)  NOT NULL,
+    `fk_ms_tenor` varchar(36)  NOT NULL,
     `amount` decimal(20,2) NOT NULL,
     `is_active` tinyint(1) NOT NULL DEFAULT 1,
     `created_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
@@ -130,8 +130,7 @@ CREATE TABLE tr_loan_billing(
     `created_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
-    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(sort_order,fk_tr_loan_header)
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 )ENGINE=InnoDB;
 
 /*Constraint Foreign Key*/
@@ -165,4 +164,3 @@ ALTER TABLE tr_loan_billing
 ADD CONSTRAINT header_tr_loan_billing FOREIGN KEY (fk_tr_loan_header) REFERENCES tr_loan_header(pk_tr_loan_header);
 ALTER TABLE tr_loan_billing
 ADD CONSTRAINT status_tr_loan_billing FOREIGN KEY (fk_ms_billing_status) REFERENCES ms_billing_status(pk_ms_billing_status);
-

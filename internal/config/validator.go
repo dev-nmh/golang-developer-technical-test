@@ -1,11 +1,8 @@
 package config
 
 import (
-	"mime/multipart"
-	"strconv"
-	"strings"
-
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
 
@@ -15,8 +12,9 @@ type Validator struct {
 
 func NewValidator(viper *viper.Viper) *validator.Validate {
 	var validate = validator.New()
-	validate.RegisterValidation("filetypeimg", FileTypeImage)
-	validate.RegisterValidation("maxsize", FileSize)
+	// validate.RegisterValidation("filetypeimg", FileTypeImage)
+	// validate.RegisterValidation("maxsize", FileSize)
+	validate.RegisterValidation("uuid-not-nil", uuidNotNil)
 
 	return validate
 }
@@ -24,40 +22,46 @@ func (cv *Validator) Validate(i interface{}) error {
 	return cv.Validator.Struct(i)
 }
 
-func FileTypeImage(fl validator.FieldLevel) bool {
-	file, ok := fl.Field().Interface().(*multipart.FileHeader)
-	if !ok {
-		return false
+/*
+	func FileTypeImage(fl validator.FieldLevel) bool {
+		file, ok := fl.Field().Interface().(*multipart.FileHeader)
+		if !ok {
+			return false
+		}
+
+		// Example file type check, adjust as needed
+		allowedTypes := map[string]bool{
+			"jpeg": true,
+			"jpg":  true,
+			"png":  true,
+		}
+
+		// Get file extension
+		fileExt := strings.ToLower(file.Filename[strings.LastIndex(file.Filename, ".")+1:])
+		return allowedTypes[fileExt]
 	}
 
-	// Example file type check, adjust as needed
-	allowedTypes := map[string]bool{
-		"jpeg": true,
-		"jpg":  true,
-		"png":  true,
-	}
+	func FileSize(fl validator.FieldLevel) bool {
+		file, ok := fl.Field().Interface().(*multipart.FileHeader)
+		if !ok {
+			return false
+		}
 
-	// Get file extension
-	fileExt := strings.ToLower(file.Filename[strings.LastIndex(file.Filename, ".")+1:])
-	return allowedTypes[fileExt]
-}
+		// Convert the size limit (in bytes) from the tag
+		maxSize := fl.Param()
+		maxSizeInt, err := strconv.ParseInt(maxSize, 10, 64)
+		if err != nil {
+			return false
+		}
 
-func FileSize(fl validator.FieldLevel) bool {
-	file, ok := fl.Field().Interface().(*multipart.FileHeader)
-	if !ok {
-		return false
+		// Check the file size
+		if file.Size > maxSizeInt {
+			return false
+		}
+		return true
 	}
-
-	// Convert the size limit (in bytes) from the tag
-	maxSize := fl.Param()
-	maxSizeInt, err := strconv.ParseInt(maxSize, 10, 64)
-	if err != nil {
-		return false
-	}
-
-	// Check the file size
-	if file.Size > maxSizeInt {
-		return false
-	}
-	return true
+*/
+func uuidNotNil(fl validator.FieldLevel) bool {
+	u, ok := fl.Field().Interface().(uuid.UUID)
+	return ok && u != uuid.Nil
 }

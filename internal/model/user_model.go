@@ -36,3 +36,13 @@ type UserResponseDetail struct {
 	UserData
 	UserAssetRecord
 }
+type UserLimitTenor struct {
+	TenorId string  `json:"tenor_id" validate:"required"`
+	Amount  float64 `json:"amount" validate:"required,gte=100000"`
+}
+type UserApproval struct {
+	AdminId    uuid.UUID        `json:"-" validate:"required,uuid-not-nil"`
+	UserId     uuid.UUID        `json:"user_id" param:"user_id" validate:"required,uuid-not-nil"`
+	UserTenor  []UserLimitTenor `json:"user_tenor_list" validate:"required_if=ApprovalId 2,len=4"`
+	ApprovalId int              `json:"approval_id" validate:"gt=1"`
+}

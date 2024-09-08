@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"github/golang-developer-technical-test/internal/constant"
-	"log"
 	"strconv"
 
 	"braces.dev/errtrace"
@@ -17,10 +16,13 @@ type ClaimsUtil struct {
 }
 
 func NewClaimUtil(e echo.Context) (*ClaimsUtil, error) {
-	claims, ok := e.Get("Authorization").(jwt.MapClaims)
-	log.Println(claims)
+	Auth := e.Get("Authorization")
+	if Auth == nil {
+		return nil, errtrace.Wrap(echo.ErrUnauthorized)
+	}
+	claims, ok := Auth.(jwt.MapClaims)
 	if !ok {
-		return nil, errtrace.New("Unauthorized Access")
+		return nil, errtrace.Wrap(echo.ErrUnauthorized)
 	}
 	return &ClaimsUtil{claims: claims}, nil
 
