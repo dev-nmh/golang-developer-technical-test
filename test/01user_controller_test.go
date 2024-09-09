@@ -15,7 +15,8 @@ import (
 )
 
 func TestRegisterAccount(t *testing.T) {
-	ClearAll()
+	ClearAllTr()
+	ClearMapUserTenor()
 	clearUsers()
 	clearAccountUser()
 	CreateAdmin()

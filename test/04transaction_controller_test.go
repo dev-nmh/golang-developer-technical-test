@@ -16,7 +16,7 @@ import (
 )
 
 func TestTransaction(t *testing.T) {
-
+	ClearAllTr()
 	user := CreateAccountUser()
 	acc, err := accountUseCase.Verify(context.Background(), &user)
 	log.Println(err)
@@ -34,6 +34,38 @@ func TestTransaction(t *testing.T) {
 	var externAccount model.AccountResponse
 	err = json.Unmarshal(accByte, &externAccount)
 	log.Println(err)
+
+	t.Run("Extern 0", func(t *testing.T) {
+		t.Parallel()
+		requestStruct := CreateRequestLoanExtern("0", 2000000.00)
+		requestByte, err := json.Marshal(requestStruct)
+		log.Println(err)
+		request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/admin/user/loan/"+account.UserId.String(), bytes.NewBuffer(requestByte))
+		request.Header.Set("Content-Type", ContentTypeJSON)
+		request.Header.Set("Accept", "*/*")
+		request.Header.Set(echo.HeaderAuthorization, "Bearer "+externAccount.AccessToken)
+		response := httptest.NewRecorder()
+		App.ServeHTTP(response, request)
+		if assert.Equal(t, http.StatusOK, response.Result().StatusCode) {
+			bytes, err := io.ReadAll(response.Body)
+			assert.Nil(t, err)
+
+			responseBody := new(model.JSONResponseGenerics[model.AccountResponse])
+			err = json.Unmarshal(bytes, responseBody)
+			assert.Nil(t, err)
+			log.Println("======================================================")
+			log.Println(responseBody)
+			log.Println(*responseBody.Data)
+			log.Println("======================================================")
+
+			tokenUser = responseBody.Data.AccessToken
+			userId = *responseBody.Data.UserId
+
+			if !assert.Equal(t, http.StatusOK, responseBody.StatusCode) {
+				return
+			}
+		}
+	})
 
 	t.Run("Web Services", func(t *testing.T) {
 		t.Parallel()
@@ -66,10 +98,72 @@ func TestTransaction(t *testing.T) {
 			}
 		}
 	})
-
-	t.Run("Extern", func(t *testing.T) {
+	t.Run("Extern 1", func(t *testing.T) {
 		t.Parallel()
-		requestStruct := CreateRequestLoanExtern()
+		requestStruct := CreateRequestLoanExtern("2", 3000000.00)
+		requestByte, err := json.Marshal(requestStruct)
+		log.Println(err)
+		request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/admin/user/loan/"+account.UserId.String(), bytes.NewBuffer(requestByte))
+		request.Header.Set("Content-Type", ContentTypeJSON)
+		request.Header.Set("Accept", "*/*")
+		request.Header.Set(echo.HeaderAuthorization, "Bearer "+externAccount.AccessToken)
+		response := httptest.NewRecorder()
+		App.ServeHTTP(response, request)
+		if assert.Equal(t, http.StatusOK, response.Result().StatusCode) {
+			bytes, err := io.ReadAll(response.Body)
+			assert.Nil(t, err)
+
+			responseBody := new(model.JSONResponseGenerics[model.AccountResponse])
+			err = json.Unmarshal(bytes, responseBody)
+			assert.Nil(t, err)
+			log.Println("======================================================")
+			log.Println(responseBody)
+			log.Println(*responseBody.Data)
+			log.Println("======================================================")
+
+			tokenUser = responseBody.Data.AccessToken
+			userId = *responseBody.Data.UserId
+
+			if !assert.Equal(t, http.StatusOK, responseBody.StatusCode) {
+				return
+			}
+		}
+	})
+	t.Run("Extern 2", func(t *testing.T) {
+		t.Parallel()
+		requestStruct := CreateRequestLoanExtern("3", 2000000.00)
+		requestByte, err := json.Marshal(requestStruct)
+		log.Println(err)
+		request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/admin/user/loan/"+account.UserId.String(), bytes.NewBuffer(requestByte))
+		request.Header.Set("Content-Type", ContentTypeJSON)
+		request.Header.Set("Accept", "*/*")
+		request.Header.Set(echo.HeaderAuthorization, "Bearer "+externAccount.AccessToken)
+		response := httptest.NewRecorder()
+		App.ServeHTTP(response, request)
+		if assert.Equal(t, http.StatusOK, response.Result().StatusCode) {
+			bytes, err := io.ReadAll(response.Body)
+			assert.Nil(t, err)
+
+			responseBody := new(model.JSONResponseGenerics[model.AccountResponse])
+			err = json.Unmarshal(bytes, responseBody)
+			assert.Nil(t, err)
+			log.Println("======================================================")
+			log.Println(responseBody)
+			log.Println(*responseBody.Data)
+			log.Println("======================================================")
+
+			tokenUser = responseBody.Data.AccessToken
+			userId = *responseBody.Data.UserId
+
+			if !assert.Equal(t, http.StatusOK, responseBody.StatusCode) {
+				return
+			}
+		}
+	})
+
+	t.Run("Extern 3", func(t *testing.T) {
+		t.Parallel()
+		requestStruct := CreateRequestLoanExtern("4", 1500000.00)
 		requestByte, err := json.Marshal(requestStruct)
 		log.Println(err)
 		request := httptest.NewRequest(http.MethodPost, "/"+constant.PREFIX_API+"/admin/user/loan/"+account.UserId.String(), bytes.NewBuffer(requestByte))

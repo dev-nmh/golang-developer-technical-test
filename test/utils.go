@@ -217,28 +217,28 @@ func CreateRequestLoanUser() model.RequestLoan {
 	return model.RequestLoan{
 		FkMsItemType:    uuid.MustParse("e8a8c8e5-6e27-11ef-b2e4-0242ac110002"),
 		TenorId:         "XYZ-TENOR-4",
-		ContractNumber:  "contract-number-13",
+		ContractNumber:  "contract-number-1",
 		AssetName:       "HONDA BRV",
-		OtrAmount:       10000.00,
+		OtrAmount:       1000000.00,
 		TransactionDate: time.Now(),
 	}
 }
 
-func CreateRequestLoanExtern() model.RequestLoan {
+func CreateRequestLoanExtern(sufix string, otrAmount float64) model.RequestLoan {
 	return model.RequestLoan{
 		FkMsItemType:    uuid.MustParse("e8a8c8e5-6e27-11ef-b2e4-0242ac110002"), // Example UUID, replace with actual value as needed
 		TenorId:         "XYZ-TENOR-1",                                          // Example tenor ID, replace with actual value
-		ContractNumber:  "contract-number-2",                                    // Example contract number, replace with actual value
+		ContractNumber:  "contract-number-" + sufix,                             // Example contract number, replace with actual value
 		AssetName:       "HONDA BRV",                                            // Example asset name, replace with actual value
-		OtrAmount:       10000.00,
+		OtrAmount:       otrAmount,
 		FkMsSource:      "CARMUD-SERVICE", // Example amount, replace with actual value
 		TransactionDate: time.Now(),       // Example transaction date, replace with actual value
 	}
 }
-func ClearAll() {
+func ClearAllTr() {
 	ClearTrLoanDetail()
 	ClearTrLoanHeader()
-	ClearMapUserTenor()
+
 }
 func ClearTrLoanDetail() {
 	err := db.Where("pk_tr_loan_detail is not null").Delete(&entity.TrLoanDetail{}).Error
