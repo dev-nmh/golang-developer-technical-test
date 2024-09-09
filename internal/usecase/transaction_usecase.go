@@ -118,7 +118,7 @@ func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.Reque
 			Stamp:             stamp,
 		}
 
-		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).Create(&loanHeaderEntity).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Create(&loanHeaderEntity).Error; err != nil {
 			c.log.Errorf("Failed to create loan header: %+v", err)
 			StatusCode = http.StatusInternalServerError
 			return errtrace.Wrap(err)
@@ -134,7 +134,7 @@ func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.Reque
 			DueDate:         now.Local().AddDate(0, tenorLimit.TenorMonths, 0),
 			Stamp:           stamp,
 		}
-		if err := tx.Clauses(clause.Locking{Strength: "SHARE"}).Create(&loanDetailEntity).Error; err != nil {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Create(&loanDetailEntity).Error; err != nil {
 			c.log.Errorf("Failed to create loan detail: %+v", err)
 			StatusCode = http.StatusInternalServerError
 			return errtrace.Wrap(err)
