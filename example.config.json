@@ -1,34 +1,38 @@
 {  "app": {
-    "name": "golang-clean-architecture",
-    "api_key":"123456789"
-  },
-  "web": {
-    "prefork": false,
-    "port": 3000
-  },
-  "log": {
-    "level": 6
-  },
-  "database": {
-    "username": "-",
-    "password": "-",
-    "host": "-",
-    "port": 3306,
-    "name": "golang_developer_technical_test",
-    "pool": {
-      "idle": 10,
-      "max": 100,
-      "lifetime": 300
-    }
-  },
-  "cdn":{
-    "cloudinary":{
-      "provider":"-",
-        "cloud_name":"-",
-        "api_key":"-",
-        "api_secret":"-",
-        "upload_folder":"-"
-      }
-    
+  "port": 3000,
+  "allow-origins":"*",
+  "name": "golang-clean-architecture",
+  "app_key":"1N14P4!@#$",
+  "api_key":"123456789",
+  "exp_token_inhour" : 1,
+  "exp_refresh_token_inday" : 30
+},
+"web": {
+  "prefork": false
+},
+"log": {
+  "level": 6
+},
+"database": {
+  "username": "root",
+  "password": "root",
+  "host": "localhost",
+  "port": 3306,
+  "name": "golang_developer_technical_test",
+  "pool": {
+    "idle": 10,
+    "max": 100,
+    "lifetime": 300
   }
+},
+"cdn":{
+  "cloudinary":{
+    "provider":"cloudinary",
+      "cloud_name":"-",
+      "api_key":"-",
+      "api_secret":"-",
+      "upload_folder":"-"
+    }
+  
+}
 }
