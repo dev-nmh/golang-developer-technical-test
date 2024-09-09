@@ -15,6 +15,12 @@ import (
 	"github.com/google/uuid"
 )
 
+var tokenUser string
+var tokenAdmin string
+var tokenExtern string
+
+var userId uuid.UUID
+
 func createMultipartUser(data model.UserData, withKtp bool, withSelfie bool) (*bytes.Buffer, string, error) {
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
@@ -100,8 +106,15 @@ func clearAccountUser() {
 		log.Fatalf("Failed clear user data : %+v", err)
 	}
 }
+
 func clearAccountAdmin() {
 	err := db.Where("pk_ms_account is not null AND fk_ms_role = 2 ").Delete(&entity.MsAccount{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear user data : %+v", err)
+	}
+}
+func clearAccountExtern() {
+	err := db.Where("pk_ms_account is not null AND fk_ms_role = 3 ").Delete(&entity.MsAccount{}).Error
 	if err != nil {
 		log.Fatalf("Failed clear user data : %+v", err)
 	}
@@ -135,4 +148,115 @@ func CreateAdmin() (*entity.MsAccount, error) {
 	}
 
 	return entity, nil
+}
+func CreateExtern() (*entity.MsAccount, error) {
+	request := model.AccoutRequest{Email: "extern@mail.com", Password: "extern"}
+	salt := uuid.New().String()
+	if hashPassword, err := util.HashPassword(viperConfig.GetString("app.app_key") + request.Password + salt); err != nil {
+		return nil, err
+	} else {
+		request.Password = hashPassword
+	}
+	accountId, err := uuid.NewV7()
+	if err != nil {
+		return nil, err
+	}
+	entity := &entity.MsAccount{
+		PkMsAccount:  accountId,
+		FkMsRole:     constant.USER_ROLES_EXTERN_INT,
+		Password:     request.Password,
+		PasswordSalt: salt,
+		Email:        request.Email,
+		Stamp: entity.Stamp{
+			CreatedBy: accountId.String(),
+			UpdatedBy: accountId.String(),
+		},
+	}
+	if err := accountRepository.Create(db, entity); err != nil {
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func CreateAccountUser() model.AccoutRequest {
+	return model.AccoutRequest{Email: "naufal@mail.com", Password: "user"}
+}
+func CreateAccountAdmin() model.AccoutRequest {
+	return model.AccoutRequest{Email: "admin@mail.com", Password: "admin"}
+}
+func CreateAccountExtern() model.AccoutRequest {
+	return model.AccoutRequest{Email: "extern@mail.com", Password: "extern"}
+}
+func CreateLoanApproval(UserId uuid.UUID) model.UserApproval {
+	return model.UserApproval{
+		UserTenor: []model.UserLimitTenor{
+			{
+				TenorId: "XYZ-TENOR-1",
+				Amount:  100000,
+			},
+			{
+				TenorId: "XYZ-TENOR-2",
+				Amount:  100000,
+			},
+			{
+				TenorId: "XYZ-TENOR-3",
+				Amount:  1000000,
+			},
+			{
+				TenorId: "XYZ-TENOR-4",
+				Amount:  5000000,
+			},
+		},
+		ApprovalId: 2,
+		UserId:     userId,
+	}
+}
+
+func CreateRequestLoanUser() model.RequestLoan {
+	return model.RequestLoan{
+		FkMsItemType:    uuid.MustParse("e8a8c8e5-6e27-11ef-b2e4-0242ac110002"),
+		TenorId:         "XYZ-TENOR-4",
+		ContractNumber:  "contract-number-1",
+		AssetName:       "HONDA BRV",
+		OtrAmount:       1000000.00,
+		TransactionDate: time.Now(),
+	}
+}
+
+func CreateRequestLoanExtern(sufix string, otrAmount float64) model.RequestLoan {
+	return model.RequestLoan{
+		FkMsItemType:    uuid.MustParse("e8a8c8e5-6e27-11ef-b2e4-0242ac110002"), // Example UUID, replace with actual value as needed
+		TenorId:         "XYZ-TENOR-1",                                          // Example tenor ID, replace with actual value
+		ContractNumber:  "contract-number-" + sufix,                             // Example contract number, replace with actual value
+		AssetName:       "HONDA BRV",                                            // Example asset name, replace with actual value
+		OtrAmount:       otrAmount,
+		FkMsSource:      "CARMUD-SERVICE", // Example amount, replace with actual value
+		TransactionDate: time.Now(),       // Example transaction date, replace with actual value
+	}
+}
+func ClearAllTr() {
+	ClearTrLoanDetail()
+	ClearTrLoanHeader()
+
+}
+func ClearTrLoanDetail() {
+	err := db.Where("pk_tr_loan_detail is not null").Delete(&entity.TrLoanDetail{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear address data : %+v", err)
+	}
+}
+
+func ClearTrLoanHeader() {
+	err := db.Where("pk_tr_loan_header is not null").Delete(&entity.TrLoanHeader{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear address data : %+v", err)
+	}
+}
+
+func ClearMapUserTenor() {
+	err := db.Where("pk_map_user_tenor is not null").Delete(&entity.MapUserTenor{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear address data : %+v", err)
+	}
 }

@@ -23,6 +23,7 @@ var App *echo.Echo
 var userController *controller.UserController
 var accountController *controller.AccountController
 var accountRepository *repository.AccountRepository
+var accountUseCase *usecase.AccountUseCase
 
 func init() {
 	config.InitCache()
@@ -37,22 +38,31 @@ func init() {
 	CloudinaryUploader := repository.NewCloudinaryUploader(coudinary, viperConfig.GetString("cdn.cloudinary.upload_folder"))
 	userRepository := repository.NewUserRepository(log)
 	accountRepository = repository.NewAccountRepository(log)
+	mapUserTenorRepository := repository.NewUserTenorRepository(log)
+	transcationLoanRepository := repository.NewTranscationLoanRepository(log)
+	tenorLoanRepository := repository.NewTenorRepository(log)
+	sourceRepository := repository.NewSourceRepository(log)
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
-	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
+	accountUseCase = usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
 
 	userController = controller.NewUserController(log, userUseCase)
 	accountController = controller.NewAccountController(log, accountUseCase)
-	loanController := controller.NewLoanController(log, nil)
 
+	loanUseCase := usecase.NewLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository)
+	loanController := controller.NewLoanController(log, loanUseCase)
 	middleware := middleware.NewMiddleware(viperConfig)
 
+	transcationLoanUseCase := usecase.NewTranscationLoanUseCase(db, log, validator, userRepository, mapUserTenorRepository, transcationLoanRepository, tenorLoanRepository, sourceRepository)
+	transcationLoanController := controller.NewTranscationLoanController(log, transcationLoanUseCase)
+
 	routeConfig := route.RouteConfig{
-		App:               App,
-		UserController:    userController,
-		LoanController:    loanController,
-		AccountController: accountController,
-		Middleware:        middleware,
+		App:                       App,
+		UserController:            userController,
+		AccountController:         accountController,
+		LoanController:            loanController,
+		Middleware:                middleware,
+		TranscationLoanController: transcationLoanController,
 	}
 
 	routeConfig.Setup()

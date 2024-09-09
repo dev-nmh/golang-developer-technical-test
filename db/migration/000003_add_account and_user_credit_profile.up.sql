@@ -60,4 +60,6 @@ VALUES ("REQUESTED","user is sending request account loan"),
 
 INSERT INTO ms_role(title,description)
 VALUES ("Admin","Admin Role"),
-       ("User","User Role");
+       ("User","User Role"),
+       ("External","System Role");
+

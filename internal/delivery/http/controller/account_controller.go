@@ -59,6 +59,11 @@ func (c *AccountController) Register(e echo.Context) error {
 		response := new(model.JSONResponse)
 		response.StatusCode = http.StatusInternalServerError
 		response.Message = "Failed to create user"
+		if httpError, ok := err.(*echo.HTTPError); ok {
+			response.StatusCode = httpError.Code
+			response.Message = httpError.Message.(string)
+			return errtrace.Wrap(e.JSON(response.StatusCode, response))
+		}
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
 	response := new(model.JSONResponseGenerics[model.AccountResponse])
@@ -88,7 +93,7 @@ func (c *AccountController) Auth(e echo.Context) error {
 		return errtrace.Wrap(e.JSON(response.StatusCode, response))
 	}
 	response := new(model.JSONResponse)
-	response.StatusCode = http.StatusCreated
+	response.StatusCode = http.StatusOK
 	response.Message = "Login success"
 	response.Data = record
 	return errtrace.Wrap(e.JSON(response.StatusCode, response))

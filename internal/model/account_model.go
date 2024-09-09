@@ -3,8 +3,8 @@ package model
 import "github.com/google/uuid"
 
 type AccoutRequest struct {
-	Email    string `validate:"required,max=100" "json:"email"`
-	Password string `validate:"required,max=14" "json:"password"`
+	Email    string `json:"email" validate:"required,max=100"`
+	Password string `json:"password" validate:"required,max=14"`
 }
 
 type AccountResponse struct {

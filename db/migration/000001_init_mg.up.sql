@@ -1,6 +1,3 @@
-CREATE DATABASE IF NOT EXISTS golang_developer_technical_test;
-USE golang_developer_technical_test;
-
 CREATE TABLE ms_billing_status (
     `pk_ms_billing_status` int  NOT  NULL AUTO_INCREMENT PRIMARY KEY,
     `title` varchar(50) NOT NULL,
@@ -84,15 +81,16 @@ CREATE TABLE map_user_tenor(
     `created_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_by` varchar(50) NOT NULL DEFAULT 'sysadmin',
-    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+    `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(fk_ms_user,fk_ms_tenor)
 )ENGINE=InnoDB;
 
 
 CREATE TABLE tr_loan_header(
     `pk_tr_loan_header` varchar(36) UNIQUE NOT NULL PRIMARY KEY,
-    `fk_ms_user` varchar(36) UNIQUE NOT NULL,
+    `fk_ms_user` varchar(36) NOT NULL,
     `fk_ms_payment_status` int NOT NULL,
-    `fk_ms_item_type`varchar(36) UNIQUE NOT NULL,
+    `fk_ms_item_type`varchar(36)  NOT NULL,
     `contract_number` varchar(60) UNIQUE NOT NULL,
     `asset_name` varchar(60) NOT NULL,
     `is_active` tinyint(1) NOT NULL DEFAULT 1,

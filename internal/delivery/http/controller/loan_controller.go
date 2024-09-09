@@ -26,7 +26,6 @@ func NewLoanController(log *logrus.Logger, useCase *usecase.LoanUseCase) *LoanCo
 }
 
 func (loan LoanController) ApprovalUser(e echo.Context) error {
-	loan.log.Println("Passing")
 	claim, err := util.NewClaimUtil(e)
 	if err != nil {
 		loan.log.Warnf("Failed For Calim Token %+v", err)
@@ -58,6 +57,15 @@ func (loan LoanController) ApprovalUser(e echo.Context) error {
 	}
 
 	req.AdminId = AdminId
+	req.UserId, err = uuid.Parse(e.Param("user_id"))
+	if err != nil {
+		response := new(model.JSONResponse)
+		loan.log.Warnf("Failed to parse request body : %+v", err)
+		response.StatusCode = http.StatusBadRequest
+		response.Message = "Bad Request"
+		response.Data = nil
+		return errtrace.Wrap(e.JSON(response.StatusCode, response))
+	}
 	if err := e.Validate(req); err != nil {
 		response := new(model.JSONResponse)
 		loan.log.Warnf("Failed For Validate %+v", err)
@@ -81,8 +89,4 @@ func (loan LoanController) ApprovalUser(e echo.Context) error {
 
 	response := util.CreateResponse(http.StatusOK, http.StatusText(http.StatusOK), req)
 	return errtrace.Wrap(e.JSON(response.StatusCode, response))
-}
-
-func (loan LoanController) CreateTenor(e echo.Context) error {
-	return errtrace.Wrap(e.JSON(http.StatusAccepted, nil))
 }
