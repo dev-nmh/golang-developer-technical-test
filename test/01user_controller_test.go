@@ -15,8 +15,12 @@ import (
 )
 
 func TestRegisterAccount(t *testing.T) {
+	ClearAll()
+	clearUsers()
 	clearAccountUser()
 	CreateAdmin()
+	CreateExtern()
+
 	h := CreateAccountUser()
 	d, _ := json.Marshal(h)
 
@@ -39,8 +43,7 @@ func TestRegisterAccount(t *testing.T) {
 		log.Println(*responseBody.Data)
 		log.Println("======================================================")
 
-		accessToken = responseBody.Data.AccessToken
-		account = responseBody.Data.AccountId
+		tokenUser = responseBody.Data.AccessToken
 
 		if !assert.Equal(t, http.StatusCreated, responseBody.StatusCode) {
 			return
@@ -48,7 +51,7 @@ func TestRegisterAccount(t *testing.T) {
 	}
 }
 func TestCreateUserProfile(t *testing.T) {
-	clearUsers()
+
 	birthDate, err := StringToTime("2000-12-05T14:41:50+07:00")
 	assert.Nil(t, err)
 	requestBody := model.UserData{
@@ -65,7 +68,7 @@ func TestCreateUserProfile(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/user/profile", body)
 	request.Header.Set("Content-Type", ContentType)
 	request.Header.Set("Accept", "*/*")
-	request.Header.Set(echo.HeaderAuthorization, "Bearer "+accessToken)
+	request.Header.Set(echo.HeaderAuthorization, "Bearer "+tokenUser)
 	response := httptest.NewRecorder()
 
 	App.ServeHTTP(response, request)

@@ -108,8 +108,7 @@ func (m Middleware) AuthAdminJWT(next echo.HandlerFunc) echo.HandlerFunc {
 			return errtrace.Wrap(e.JSON(response.StatusCode, response))
 		} else {
 			claims := e.Get("Authorization").(jwt.MapClaims)
-
-			if role, ok := claims["RoleId"].(string); !ok || role != constant.USER_ROLES_ADMIN {
+			if role, ok := claims["RoleId"].(string); !ok || role == constant.USER_ROLES_USER {
 				response := util.CreateResponse(http.StatusForbidden, "Forbidden: Admin access required", nil)
 				return errtrace.Wrap(e.JSON(response.StatusCode, response))
 			} else {

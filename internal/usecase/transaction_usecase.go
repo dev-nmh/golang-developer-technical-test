@@ -17,6 +17,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type TranscationLoanUseCase struct {
@@ -46,40 +47,39 @@ func NewTranscationLoanUseCase(db *gorm.DB, log *logrus.Logger, validate *valida
 func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.RequestLoan) (interface{}, int, error) {
 	tx := c.db.WithContext(ctx).Begin()
 	defer tx.Rollback()
-	c.log.Println("Masuk Pak eko -1")
+	c.log.Println("wORK")
 	if approvalStatus, err := c.userRepository.GetApprovalStatusById(tx, req.FkMsUser); err != nil {
 		c.log.Warnf("Failed to get approvalStatus: %+v", err)
 		return nil, http.StatusInternalServerError, errtrace.Wrap(err)
 	} else if approvalStatus != constant.APPROVAL_STATUS_APPROVED {
+		c.log.Warnf("Failed to create Loan: %+v", err)
 		return nil, http.StatusForbidden, errtrace.Wrap(echo.ErrForbidden)
 	}
 
 	var tenorLimit entity.MsTenor
 	var userLimitTenor entity.MapUserTenor
 	var source entity.MsSource
-	c.log.Println("Masuk Pak eko 0")
 
 	var total *float64
-	if err := c.userTenorRepository.FindByWhere(tx, &userLimitTenor, map[string]interface{}{
+	if err := c.userTenorRepository.FindByWhere(tx.Clauses(clause.Locking{Strength: "UPDATE"}), &userLimitTenor, map[string]interface{}{
 		"fk_ms_user":  req.FkMsUser,
 		"fk_ms_tenor": req.TenorId,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
-	c.log.Println("Masuk Pak eko 1")
-	if err := c.tenorLoanRepository.FindByWhere(tx, &tenorLimit, map[string]interface{}{
+
+	if err := c.tenorLoanRepository.FindByWhere(tx.Clauses(clause.Locking{Strength: "UPDATE"}), &tenorLimit, map[string]interface{}{
 		"pk_ms_tenor": req.TenorId,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
-	c.log.Println("Masuk Pak eko 2")
-	if err := c.sourceRepository.FindByWhere(tx, &source, map[string]interface{}{
+
+	if err := c.sourceRepository.FindByWhere(tx.Clauses(clause.Locking{Strength: "UPDATE"}), &source, map[string]interface{}{
 		"pk_ms_source": req.FkMsSource,
 	}); err != nil {
 		return nil, http.StatusNotFound, errtrace.Wrap(err)
 	}
-	c.log.Println("Masuk Pak eko 3")
-	total, err := c.transcationLoanRepository.GetTotalNotPaidLoanByUserTenorId(tx, req.FkMsUser)
+	total, err := c.transcationLoanRepository.GetTotalNotPaidLoanByUserTenorId(tx.Clauses(clause.Locking{Strength: "UPDATE"}), req.FkMsUser)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, http.StatusInternalServerError, errtrace.Wrap(err)
@@ -120,9 +120,13 @@ func (c TranscationLoanUseCase) CreateLoan(ctx context.Context, req *model.Reque
 		Stamp:           stamp,
 	}
 	if err := c.transcationLoanRepository.Header.Create(tx, &loanHeaderEntity); err != nil {
+		tx.Rollback()
+		c.log.Errorf("Failed to create loan header: %+v", err)
 		return nil, http.StatusOK, errtrace.Wrap(err)
 	}
 	if err := c.transcationLoanRepository.Detail.Create(tx, &loanDetailEntity); err != nil {
+		tx.Rollback()
+		c.log.Errorf("Failed to create loan detail: %+v", err)
 		return nil, http.StatusOK, errtrace.Wrap(err)
 	}
 	if err := tx.Commit().Error; err != nil {

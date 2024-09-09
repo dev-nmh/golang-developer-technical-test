@@ -122,12 +122,11 @@ func (acc *AccountUseCase) Verify(ctx context.Context, request *model.AccoutRequ
 	if (record == entity.MsAccount{}) {
 		return nil, echo.ErrNotFound
 	}
-	acc.log.Println(record)
 	isTrue := util.CheckPasswordHash(acc.config.GetString("app.app_key")+request.Password+record.PasswordSalt, record.Password)
 	if !isTrue {
 		return nil, echo.ErrForbidden
 	}
-	if record.FkMsRole == constant.USER_ROLES_ADMIN_INT {
+	if record.FkMsRole != constant.USER_ROLES_USER_INT {
 		token, err := acc.jwtGenerator.CreateAccessTokenAdmin(&model.BaseClaims{
 			ID:     record.PkMsAccount,
 			Email:  record.Email,
@@ -141,10 +140,6 @@ func (acc *AccountUseCase) Verify(ctx context.Context, request *model.AccoutRequ
 		return respose, nil
 	}
 
-	if err != nil {
-		acc.log.Warnf("Failed to generate token: %+v", err)
-		return nil, echo.ErrInternalServerError
-	}
 	var user entity.MsUser
 	err = acc.userRepository.FindByWhere(acc.db, &user, map[string]interface{}{
 		"fk_ms_account": record.PkMsAccount,

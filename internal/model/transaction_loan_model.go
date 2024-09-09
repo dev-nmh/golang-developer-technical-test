@@ -21,7 +21,7 @@ updated_at
 */
 
 type RequestLoan struct {
-	FkMsUser        uuid.UUID `json:"user_id,omitempty" validate:"required"`
+	FkMsUser        uuid.UUID `json:"user_id,omitempty" param:"user_id" validate:"required"`
 	CreateBy        uuid.UUID `json:"created_by,omitempty" validate:"required"`
 	FkMsItemType    uuid.UUID `json:"item_type_id" validate:"required"`
 	FkMsSource      string    `json:"source_id" validate:"required"`

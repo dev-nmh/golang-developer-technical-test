@@ -88,7 +88,7 @@ CREATE TABLE map_user_tenor(
 
 CREATE TABLE tr_loan_header(
     `pk_tr_loan_header` varchar(36) UNIQUE NOT NULL PRIMARY KEY,
-    `fk_ms_user` varchar(36) UNIQUE NOT NULL,
+    `fk_ms_user` varchar(36) NOT NULL,
     `fk_ms_payment_status` int NOT NULL,
     `fk_ms_item_type`varchar(36)  NOT NULL,
     `contract_number` varchar(60) UNIQUE NOT NULL,

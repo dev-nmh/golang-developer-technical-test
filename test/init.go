@@ -23,6 +23,7 @@ var App *echo.Echo
 var userController *controller.UserController
 var accountController *controller.AccountController
 var accountRepository *repository.AccountRepository
+var accountUseCase *usecase.AccountUseCase
 
 func init() {
 	config.InitCache()
@@ -43,7 +44,7 @@ func init() {
 	sourceRepository := repository.NewSourceRepository(log)
 
 	userUseCase := usecase.NewUserUseCase(db, log, validator, userRepository, CloudinaryUploader)
-	accountUseCase := usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
+	accountUseCase = usecase.NewAccountUseCase(db, log, validator, viperConfig, userRepository, accountRepository, jwtGenerator)
 
 	userController = controller.NewUserController(log, userUseCase)
 	accountController = controller.NewAccountController(log, accountUseCase)

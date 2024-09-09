@@ -37,6 +37,8 @@ func (c *RouteConfig) SetupAdminAuth() {
 	private := c.App.Group(constant.PREFIX_API + "/admin")
 	private.Use(c.Middleware.AuthAdminJWT)
 	private.POST("/user/:user_id/approval", c.LoanController.ApprovalUser)
+	private.POST("/user/loan/:user_id", c.TranscationLoanController.ExternCreateLoanTransaction)
+
 }
 
 func (c *RouteConfig) SetupUserAuth() {
